@@ -40,10 +40,17 @@ namespace APBDProjekt.Client.Services
 
         public async Task<List<StockChartData>> GetChartData(SelectEventArgs<Stock> args)
         {
-            string apiHttp = $"https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/1970-01-01/{DateTime.Now}?adjusted=true&sort=asc&limit=50000&apiKey=ot9qB766I32KClp0uaQbhpbDJOjlQkL1";
+            var FirstDate = DateTime.Now.AddDays(-90);
+            string apiHttp = $"https://api.polygon.io/v2/aggs/ticker/{args.ItemData.Ticker}/range/1/day/{FirstDate.ToString("yyyy-MM-dd")}/{DateTime.Now.ToString("yyyy-MM-dd")}?adjusted=true&sort=asc&limit=50000&apiKey=ot9qB766I32KClp0uaQbhpbDJOjlQkL1";
             HttpResponseMessage responseMessage = await _client.GetAsync(apiHttp);
             var content = await responseMessage.Content.ReadAsStringAsync();
-            return JObject.Parse(content).SelectToken("results").ToObject<List<StockChartData>>();
+            var list = JObject.Parse(content).SelectToken("results").ToObject<List<StockChartData>>();
+            for (int i = 0; i < list.Count() - 1; i++)
+            {
+                list[i].Date = FirstDate.AddDays(i);
+            }
+            return list;
+
         }
 
 

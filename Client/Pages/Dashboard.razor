@@ -68,10 +68,17 @@
                         <div>Chart</div>
                     </HeaderTemplate>
                     <ContentTemplate>
-                        <SfStockChart>
+                        <SfStockChart Title="@GetTitle()" EnableSelector="false">
+                            <StockChartPeriods>
+                                <StockChartPeriod IntervalType=RangeIntervalType.Hours Interval="24" Text='24h' Selected="true"></StockChartPeriod>
+                                <StockChartPeriod IntervalType=RangeIntervalType.Weeks Interval="1" Text='1w'></StockChartPeriod>
+                                <StockChartPeriod IntervalType=RangeIntervalType.Months Interval="1" Text='1m'></StockChartPeriod>
+                                <StockChartPeriod IntervalType=RangeIntervalType.Months Interval="3" Text='3m'></StockChartPeriod>
+                            </StockChartPeriods>
                             <StockChartCrosshairSettings Enable="true"></StockChartCrosshairSettings>
+                            @* <StockChartTooltipSettings Enable="true" Shared="true" Format="${point.x} : ${point.y}" Header="AAPL"></StockChartTooltipSettings> *@
                             <StockChartSeriesCollection>
-                                <StockChartSeries DataSource="@ChartData" Type="ChartSeriesType.Column" XName="Date" YName="Y"></StockChartSeries>
+                                <StockChartSeries DataSource="@ChartData" Type="ChartSeriesType.Line" XName="Date" YName="c" High="h" Low="l" Open="o" Close="c" Volume="v"></StockChartSeries>
                             </StockChartSeriesCollection>
                         </SfStockChart>
                     </ContentTemplate>
@@ -135,6 +142,11 @@
     {
         Selected = await _service.GetStock(args);
         ChartData = await _service.GetChartData(args);
+    }
+
+    public string GetTitle()
+    {
+        return Selected.Ticker + " Stock Price";
     }
 
 }
