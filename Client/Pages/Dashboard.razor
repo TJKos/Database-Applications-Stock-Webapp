@@ -1,0 +1,140 @@
+@page "/dashboard"
+@inject IStockService _service;
+
+<SfAutoComplete TValue="string" TItem="Stock" Placeholder="e.g. TSLA" DataSource="@LocalData">
+    <AutoCompleteFieldSettings Value="Ticker" />
+    <AutoCompleteEvents TValue="string" TItem="Stock" Filtering="@Filter" OnValueSelect="@Show"></AutoCompleteEvents>
+</SfAutoComplete>
+
+@if (Selected != null)
+{
+
+    <div class="dashboard">
+        <SfDashboardLayout CellSpacing="@(new double[]{10 ,10 })" CellAspectRatio="2" Columns="4" AllowDragging="false"
+        AllowFloating="true" ShowGridLines="true">
+            <DashboardLayoutPanels>
+
+                <DashboardLayoutPanel SizeX="2" Column="0" Row="1">
+                    <HeaderTemplate>
+                        <div>Description</div>
+                    </HeaderTemplate>
+                    <ContentTemplate>
+                        <div>@Selected.Description</div>
+                    </ContentTemplate>
+                </DashboardLayoutPanel>
+
+                <DashboardLayoutPanel Column="1" Row="0">
+                    <HeaderTemplate>
+                        <div>Info</div>
+                    </HeaderTemplate>
+                    <ContentTemplate>
+                        <div>
+                            <div>@Selected.Sic_Description</div>
+                            @if (@Selected.Homepage_Url != null)
+                            {   
+                            <div><a href="@Selected.Homepage_Url">@Selected.Homepage_Url</a></div>
+                            }
+                            @if (@Selected.Homepage_Url != null && @Selected.Branding.Icon_Url != null)
+                            {   
+                                <a href="@Selected.Homepage_Url">
+                                    <img src="@Selected.Branding.Icon_Url?apiKey=@ApiKey" width="20%"
+                                    alt="@Selected.Homepage_Url" class="image">
+                                </a>
+                            }
+                        </div>
+                    </ContentTemplate>
+                </DashboardLayoutPanel>
+
+                <DashboardLayoutPanel Column="0" Row="0">
+                    <HeaderTemplate>
+                        <div>@Selected.Name (@Selected.Ticker)</div>
+                    </HeaderTemplate>
+                    <ContentTemplate>
+                        <div>
+                            @if (@Selected.Homepage_Url != null && @Selected.Branding.Logo_Url != null)
+                            {   
+                                <a href="@Selected.Homepage_Url">
+                                    <img src="@Selected.Branding.Logo_Url?apiKey=@ApiKey" width="20%" alt="@Selected.Homepage_Url"
+                                    class="image">
+                                </a>
+                            }
+                            <div>Country: @Selected.Locale.ToUpper()</div>
+                        </div>
+                    </ContentTemplate>
+                </DashboardLayoutPanel>
+
+                <DashboardLayoutPanel SizeX="2" SizeY="2" Column="0" Row="2">
+                    <HeaderTemplate>
+                        <div>Chart</div>
+                    </HeaderTemplate>
+                    <ContentTemplate>
+                        <SfStockChart>
+                            <StockChartCrosshairSettings Enable="true"></StockChartCrosshairSettings>
+                            <StockChartSeriesCollection>
+                                <StockChartSeries DataSource="@ChartData" Type="ChartSeriesType.Column" XName="Date" YName="Y"></StockChartSeries>
+                            </StockChartSeriesCollection>
+                        </SfStockChart>
+                    </ContentTemplate>
+                </DashboardLayoutPanel>
+
+                <DashboardLayoutPanel SizeX="2" SizeY="4" Column="3" Row="0">
+                    <HeaderTemplate>
+                        <div>Articles</div>
+                    </HeaderTemplate>
+                    <ContentTemplate>
+                        <div>
+                            newsy
+                        </div>
+                    </ContentTemplate>
+                </DashboardLayoutPanel>
+            </DashboardLayoutPanels>
+        </SfDashboardLayout>
+    </div>
+
+    <style>
+        .e-panel-header {
+            background-color: rgba(0, 0, 0, .1);
+            text-align: center;
+        }
+
+        .e-panel-content {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .dashboard {
+            margin-top: 20px;
+        }
+
+        .image {
+            max-width: fit-content;
+            height: auto;
+        }
+    </style>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        ApiKey = "ot9qB766I32KClp0uaQbhpbDJOjlQkL1";
+        @* UserId = await *@
+    }
+
+    public string ApiKey { get; set; }
+    public string UserId { get; set; }
+    public StockGet Selected { get; set; }
+    public List<Stock> LocalData { get; set; }
+    public List<StockChartData> ChartData { get; set; }
+
+    public async Task Filter(FilteringEventArgs args)
+    {
+        LocalData = await _service.GetStocks(args.Text);
+    }
+
+    public async Task Show(SelectEventArgs<Stock> args)
+    {
+        Selected = await _service.GetStock(args);
+        ChartData = await _service.GetChartData(args);
+    }
+
+}
