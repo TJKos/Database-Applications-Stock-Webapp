@@ -8,5 +8,6 @@ namespace APBDProjekt.Server.Models
 {
     public class ApplicationUser : IdentityUser
     {
+        public virtual ICollection<StockInfoDB> StockInfo { get; set; }
     }
 }

@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace APBDProjekt.Shared.Models.DTOs
+namespace APBDProjekt.Shared.Models
 {
     public class StockChartData
     {
+        public int IdStockChartData { get; set; }
         public long v { get; set; }
         public Double vw { get; set; }
         public Double o { get; set; }

@@ -11,6 +11,7 @@ using System.Linq;
 using APBDProjekt.Server.Data;
 using APBDProjekt.Server.Models;
 using APBDProjekt.Client.Services;
+using APBDProjekt.Server.Services;
 
 namespace APBDProjekt.Server
 {
@@ -27,8 +28,8 @@ namespace APBDProjekt.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            // services.AddScoped<IStockService, StockService>();            
-
+            services.AddScoped<IStockServiceDB, StockServiceDB>();            
+            services.AddSwaggerGen();
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(
                     Configuration.GetConnectionString("DefaultConnection")));
@@ -63,6 +64,12 @@ namespace APBDProjekt.Server
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blazor API V1");
+            });
 
             app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();

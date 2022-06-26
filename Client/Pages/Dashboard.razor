@@ -1,9 +1,27 @@
 @page "/dashboard"
+@using System.Security.Claims
 @inject IStockService _service;
+@inject AuthenticationStateProvider _authenticationStateProvider;
 
 <SfAutoComplete TValue="string" TItem="Stock" Placeholder="e.g. TSLA" DataSource="@LocalData">
-    <AutoCompleteFieldSettings Value="Ticker" />
-    <AutoCompleteEvents TValue="string" TItem="Stock" Filtering="@Filter" OnValueSelect="@Show"></AutoCompleteEvents>
+    <AutoCompleteTemplates TItem="Stock">
+        <GroupTemplate>
+            <span class='auto_market'>@(context.Text)</span>
+        </GroupTemplate>
+        <ItemTemplate>
+            <span>
+                <span class="auto_ticker">@((context as Stock).Ticker)</span>
+            </span>
+            <span>
+                <span class="auto_name">@((context as Stock).Name)</span>
+            </span>
+            <span>
+                <span class="auto_primaryex">@((context as Stock).Primary_Exchange)</span>
+            </span>
+        </ItemTemplate>
+    </AutoCompleteTemplates>
+    <AutoCompleteFieldSettings Value="Ticker" GroupBy="Market"/>
+    <AutoCompleteEvents TValue="string" TItem="Stock" Filtering="@Filter" OnValueSelect="@Show" ></AutoCompleteEvents>
 </SfAutoComplete>
 
 @if (Selected != null)
@@ -11,10 +29,10 @@
 
     <div class="dashboard">
         <SfDashboardLayout CellSpacing="@(new double[]{10 ,10 })" CellAspectRatio="2" Columns="4" AllowDragging="false"
-        AllowFloating="true" ShowGridLines="true">
+        AllowFloating="true" ShowGridLines="false">
             <DashboardLayoutPanels>
 
-                <DashboardLayoutPanel SizeX="2" Column="0" Row="1">
+                <DashboardLayoutPanel SizeX="2" Column="0" Row="1" >
                     <HeaderTemplate>
                         <div>Description</div>
                     </HeaderTemplate>
@@ -34,10 +52,10 @@
                             {   
                             <div><a href="@Selected.Homepage_Url">@Selected.Homepage_Url</a></div>
                             }
-                            @if (@Selected.Homepage_Url != null && @Selected.Branding.Icon_Url != null)
+                            @if (@Selected.Homepage_Url != null && @Selected.Icon_Url != null)
                             {   
                                 <a href="@Selected.Homepage_Url">
-                                    <img src="@Selected.Branding.Icon_Url?apiKey=@ApiKey" width="20%"
+                                    <img src="@Selected.Icon_Url?apiKey=@ApiKey" width="20%"
                                     alt="@Selected.Homepage_Url" class="image">
                                 </a>
                             }
@@ -47,14 +65,18 @@
 
                 <DashboardLayoutPanel Column="0" Row="0">
                     <HeaderTemplate>
-                        <div>@Selected.Name (@Selected.Ticker)</div>
+                        
+                        <div>
+                            @Selected.Name (@Selected.Ticker)
+                            <SfButton IconCss="e-btn-sb-icons e-add-icon" CssClass="e-small e-round" IsPrimary="true" class="addbutton" @onclick=@SaveStockInfo></SfButton>
+                        </div>
                     </HeaderTemplate>
                     <ContentTemplate>
                         <div>
-                            @if (@Selected.Homepage_Url != null && @Selected.Branding.Logo_Url != null)
+                            @if (@Selected.Homepage_Url != null && @Selected.Logo_Url != null)
                             {   
                                 <a href="@Selected.Homepage_Url">
-                                    <img src="@Selected.Branding.Logo_Url?apiKey=@ApiKey" width="20%" alt="@Selected.Homepage_Url"
+                                    <img src="@Selected.Logo_Url?apiKey=@ApiKey" width="20%" alt="@Selected.Homepage_Url"
                                     class="image">
                                 </a>
                             }
@@ -63,45 +85,75 @@
                     </ContentTemplate>
                 </DashboardLayoutPanel>
 
-                <DashboardLayoutPanel SizeX="2" SizeY="2" Column="0" Row="2">
+                <DashboardLayoutPanel SizeX="2" SizeY="3" Column="0" Row="2">
                     <HeaderTemplate>
-                        <div>Chart</div>
+                        <div>Stock Chart</div>
                     </HeaderTemplate>
                     <ContentTemplate>
-                        <SfStockChart Title="@GetTitle()" EnableSelector="false">
+                        <div>@GetTitle()</div>
+                        <SfStockChart EnableSelector="false">
                             <StockChartPeriods>
-                                <StockChartPeriod IntervalType=RangeIntervalType.Hours Interval="24" Text='24h' Selected="true"></StockChartPeriod>
+                                <StockChartPeriod IntervalType=RangeIntervalType.Hours Interval="24" Text='24h'></StockChartPeriod>
                                 <StockChartPeriod IntervalType=RangeIntervalType.Weeks Interval="1" Text='1w'></StockChartPeriod>
                                 <StockChartPeriod IntervalType=RangeIntervalType.Months Interval="1" Text='1m'></StockChartPeriod>
-                                <StockChartPeriod IntervalType=RangeIntervalType.Months Interval="3" Text='3m'></StockChartPeriod>
+                                <StockChartPeriod IntervalType=RangeIntervalType.Months Interval="3" Text='3m' Selected="true"></StockChartPeriod>
                             </StockChartPeriods>
                             <StockChartCrosshairSettings Enable="true"></StockChartCrosshairSettings>
-                            @* <StockChartTooltipSettings Enable="true" Shared="true" Format="${point.x} : ${point.y}" Header="AAPL"></StockChartTooltipSettings> *@
+                            @* <StockChartTooltipSettings Enable="true" Shared="true" Format="${point.x} : ${point.y}" Header="@Selected.Ticker"></StockChartTooltipSettings> *@
                             <StockChartSeriesCollection>
-                                <StockChartSeries DataSource="@ChartData" Type="ChartSeriesType.Line" XName="Date" YName="c" High="h" Low="l" Open="o" Close="c" Volume="v"></StockChartSeries>
+                                <StockChartSeries DataSource="@ChartData" Type="ChartSeriesType.HiloOpenClose" XName="Date" YName="c" High="h" Low="l" Open="o" Close="c" Volume="v"></StockChartSeries>
                             </StockChartSeriesCollection>
                         </SfStockChart>
                     </ContentTemplate>
                 </DashboardLayoutPanel>
 
-                <DashboardLayoutPanel SizeX="2" SizeY="4" Column="3" Row="0">
+                <DashboardLayoutPanel SizeX="2" SizeY="5" Column="3" Row="0">
                     <HeaderTemplate>
-                        <div>Articles</div>
+                        <div>Last 5 articles</div>
                     </HeaderTemplate>
                     <ContentTemplate>
-                        <div>
-                            newsy
-                        </div>
+                        @for (int i = 4; i >= 0; i--)
+                        {
+                            <article class="article">
+                            <h1 style="font-size:18px"><a href="@Articles.ElementAt(i).Article_Url" title="">@Articles.ElementAt(i).Title </a></h1>
+                            <img src="@Articles.ElementAt(i).Image_Url" alt="" class="articleimage"/>
+                            <p class="artdesc">@Articles.ElementAt(i).Description</p>
+                            </article>
+                        }
                     </ContentTemplate>
                 </DashboardLayoutPanel>
             </DashboardLayoutPanels>
         </SfDashboardLayout>
     </div>
 
+
+}
+
     <style>
+        .auto_market{
+
+        }
+
+        .auto_primaryex{
+            right: 10px;
+            position: absolute;
+        }
+
+        .auto_ticker {
+            font-weight: bold;
+        }
+
+        .auto_name {
+            left: 80px;
+            position: absolute;
+        }
+
         .e-panel-header {
-            background-color: rgba(0, 0, 0, .1);
+            background-color: rgba(0, 0, 0, 0.1);
             text-align: center;
+            @* display: flex;  *@
+            @* align-items: flex-end; *@
+            @* align-content: flex-end; *@
         }
 
         .e-panel-content {
@@ -110,6 +162,8 @@
         }
 
         .dashboard {
+            @* background-color: rgba(0, 0, 0, 0); *@
+            @* border-color: rgba(0, 0, 0, 0); *@
             margin-top: 20px;
         }
 
@@ -117,21 +171,112 @@
             max-width: fit-content;
             height: auto;
         }
+
+        .addbutton {
+            color: crimson;
+            float: right;
+            margin-left: -50%;
+            margin-right: 2em;
+        }
+
+        .articleimage {
+            width: auto;
+            height: 90px;
+            float: right;
+            margin: 0 0 0 15px;
+            @* align: right; *@
+        }
+
+        .e-dashboardlayout.e-control .e-panel{
+            border: 0px;
+            box-shadow:none;
+        }
+
+        .e-dashboardlayout.e-control .e-panel:hover{
+            border: 0px;
+            box-shadow: none;
+        }
+
+        .article {
+            text-align: right;
+            margin-bottom: 100px;
+        }
+
+        .artdesc {
+            margin-right: 0;
+            margin-left: 30%;
+            word-wrap: break-word;
+            text-align: right;
+            @* max-width: 50%; *@
+        }
+
+        #button-control {
+            width: 100%;
+            margin: 8% 0;
+            text-align: center;
+        }
+        #button-control .e-btn {
+            float: left;
+        }
+        @@media only screen and (max-width: 500px) {
+            #button-control {
+                margin-left: -3%;
+            }
+        }
+        .button-section {
+            width: 80%;
+            margin: auto;
+        }
+        #button-control .col-xs-12 {
+            margin: 15px 0;
+        }
+        @@font-face {
+            font-family: 'button-icons';
+            src: url(data:application/x-font-ttf;charset=utf-8;base64,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) format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        .e-btn-sb-icons {
+            font-family: 'button-icons';
+            line-height: 1;
+            font-style: normal;
+            font-weight: normal;
+            font-variant: normal;
+            text-transform: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .e-play-icon::before {
+            content: '\e701';
+        }
+        .e-pause-icon::before {
+            content: '\e705';
+        }
+        .e-open-icon::before {
+            content: '\e70d';
+        }
+        .e-add-icon::before {
+            content: '\e70a';
+        }
     </style>
-}
 
 @code {
+    
     protected override async Task OnInitializedAsync()
     {
         ApiKey = "ot9qB766I32KClp0uaQbhpbDJOjlQkL1";
-        @* UserId = await *@
+        AuthState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        UserId = AuthState.User.FindFirst(e => e.Type == "sub").Value; // ClaimTypes.NameIdentifier nie działa, tylko na serwerze :??
     }
 
     public string ApiKey { get; set; }
+    public AuthenticationState AuthState { get; set; }
+    public int MyProperty { get; set; }
     public string UserId { get; set; }
-    public StockGet Selected { get; set; }
+    public StockInfo Selected { get; set; }
     public List<Stock> LocalData { get; set; }
     public List<StockChartData> ChartData { get; set; }
+    public ConcurrentBag<Article> Articles { get; set; }
 
     public async Task Filter(FilteringEventArgs args)
     {
@@ -141,12 +286,19 @@
     public async Task Show(SelectEventArgs<Stock> args)
     {
         Selected = await _service.GetStock(args);
+        Selected.IdUser = UserId;
         ChartData = await _service.GetChartData(args);
+        Articles = await _service.GetArticles(args);
     }
 
     public string GetTitle()
     {
         return Selected.Ticker + " Stock Price";
+    }
+
+    public async Task SaveStockInfo()
+    {
+        await _service.SaveStockInfo(Selected);
     }
 
 }
