@@ -18,6 +18,11 @@ namespace APBDProjekt.Server.Services
         public IQueryable<StockChartDataDB> GetStockChartData(DateTime date, int idStockInfo);
         public IQueryable<StockChartDataDB> GetStockChartDataDB(int id);
         public  Task AddStockChart(StockChartDataDB stockChartData);
+        public IQueryable<StockInfoDB> GetWatchlist(string idUser);
+        public Task AddStockToWatchlist(int idStockInfo, string idUser);
+
+
+        
 
     }
 }

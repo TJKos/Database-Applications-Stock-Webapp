@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using APBDProjekt.Server.Data;
 using APBDProjekt.Server.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace APBDProjekt.Server.Services
@@ -66,6 +67,36 @@ namespace APBDProjekt.Server.Services
         public IQueryable<StockChartDataDB> GetStockChartDataDB(int id)
         {
             throw new NotImplementedException();
+        }
+
+        public IQueryable<StockInfoDB> GetWatchlist(string idUser)
+        {
+            return _context.StockInfo_ApplicationUser
+            .Include(e => e.StockInfo)
+            .ThenInclude(e => e.StockInfo_ApplicationUser)
+            .Include(e => e.ApplicationUser)
+            .ThenInclude(e => e.StockInfo_ApplicationUser)
+            .Where(e => e.IdUser == idUser)
+            .Select(e => new StockInfoDB{
+                Name = e.StockInfo.Name,
+                Ticker = e.StockInfo.Ticker,
+                Locale = e.StockInfo.Locale,
+                Phone_Number = e.StockInfo.Phone_Number,
+                Homepage_Url = e.StockInfo.Homepage_Url,
+                Description = e.StockInfo.Description,
+                Sic_Description = e.StockInfo.Sic_Description,
+                Logo_Url = e.StockInfo.Logo_Url,
+                Icon_Url = e.StockInfo.Icon_Url
+            });
+
+        }
+
+        public async Task AddStockToWatchlist(int idStockInfo, string idUser)
+        {
+            await _context.StockInfo_ApplicationUser.AddAsync(new StockInfo_ApplicationUser{
+                IdStockInfo = idStockInfo,
+                IdUser = idUser
+            });
         }
 
         public async Task SaveChanges()

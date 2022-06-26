@@ -47,11 +47,6 @@
                     </HeaderTemplate>
                     <ContentTemplate>
                         <div>
-                            <div>@Selected.Sic_Description</div>
-                            @if (@Selected.Homepage_Url != null)
-                            {   
-                            <div><a href="@Selected.Homepage_Url">@Selected.Homepage_Url</a></div>
-                            }
                             @if (@Selected.Homepage_Url != null && @Selected.Icon_Url != null)
                             {   
                                 <a href="@Selected.Homepage_Url">
@@ -59,6 +54,12 @@
                                     alt="@Selected.Homepage_Url" class="image">
                                 </a>
                             }
+                            <div>@Selected.Sic_Description</div>
+                            @if (@Selected.Homepage_Url != null)
+                            {   
+                            <div><a href="@Selected.Homepage_Url">@Selected.Homepage_Url</a></div>
+                            }
+
                         </div>
                     </ContentTemplate>
                 </DashboardLayoutPanel>
@@ -68,7 +69,7 @@
                         
                         <div>
                             @Selected.Name (@Selected.Ticker)
-                            <SfButton IconCss="e-btn-sb-icons e-add-icon" CssClass="e-small e-round" IsPrimary="true" class="addbutton" @onclick=@SaveStockInfo></SfButton>
+                            <SfButton IconCss="e-btn-sb-icons e-add-icon" CssClass="e-small e-round" IsPrimary="true" class="addbutton" @onclick=@AddToWatchlist></SfButton>
                         </div>
                     </HeaderTemplate>
                     <ContentTemplate>
@@ -271,7 +272,6 @@
 
     public string ApiKey { get; set; }
     public AuthenticationState AuthState { get; set; }
-    public int MyProperty { get; set; }
     public string UserId { get; set; }
     public StockInfo Selected { get; set; }
     public List<Stock> LocalData { get; set; }
@@ -286,9 +286,10 @@
     public async Task Show(SelectEventArgs<Stock> args)
     {
         Selected = await _service.GetStock(args);
-        Selected.IdUser = UserId;
         ChartData = await _service.GetChartData(args);
         Articles = await _service.GetArticles(args);
+        await SaveStockInfo();
+        @* Selected.IdStockInfo = (await _service.GetStockInfo(Selected.Ticker)).IdStockInfo; *@
     }
 
     public string GetTitle()
@@ -299,6 +300,11 @@
     public async Task SaveStockInfo()
     {
         await _service.SaveStockInfo(Selected);
+    }
+
+    public async Task AddToWatchlist()
+    {
+        await _service.AddToWatchlist((await _service.GetStockInfo(Selected.Ticker)).IdStockInfo, UserId);
     }
 
 }

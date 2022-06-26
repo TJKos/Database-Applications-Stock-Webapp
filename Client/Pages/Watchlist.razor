@@ -1,0 +1,76 @@
+@page "/watchlist"
+@using System.Security.Claims
+@using Newtonsoft.Json
+@inject IStockService _service;
+@inject AuthenticationStateProvider _authenticationStateProvider;
+
+@if (StockWatchlist == null)
+{
+    <div>Loading Watchlist...</div>
+}else if (StockWatchlist.Count != 0)
+{
+    <div class="container">
+        <h3 class="p-3 text-center">Your Watchlist</h3>
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr style="text-align:center">
+                    <th>Logo</th>
+                    <th>Ticker</th>
+                    <th>Name</th>
+                    <th>Market</th>
+                    <th>Country</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var stock in StockWatchlist)
+                {
+                    <tr style="text-align:center">
+                        <td style="vertical-align:middle"><img src="@stock.Logo_Url?apiKey=@ApiKey" alt="" class="logoimage"/></td>
+                        <td style="vertical-align:middle">@stock.Ticker</td>
+                        <td style="vertical-align:middle">@stock.Name</td>
+                        <td style="vertical-align:middle">@stock.Market</td>
+                        <td style="vertical-align:middle">@stock.Locale.ToUpper()</td>
+                        <td style="vertical-align:middle"><SfButton CssClass="e-primary">Delete</SfButton></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}else
+{
+    <h1>Your Watchlist is empty.</h1>
+    <div>Head to the dashboard to add something to your Watchlist!</div>
+}
+
+<style>
+    
+    .logoimage {
+        height: 100px;
+        width: auto;
+    }
+</style>
+
+@code {
+    
+    protected override async Task OnInitializedAsync()
+    {
+        ApiKey = "ot9qB766I32KClp0uaQbhpbDJOjlQkL1";
+        AuthState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        UserId = AuthState.User.FindFirst(e => e.Type == "sub").Value; // ClaimTypes.NameIdentifier nie działa, tylko na serwerze :??
+        StockWatchlist = await _service.GetWatchlist(UserId);
+        StateHasChanged();
+    }
+
+    public string ApiKey { get; set; }
+    public AuthenticationState AuthState { get; set; }
+    public string UserId { get; set; }
+    public List<StockInfo> StockWatchlist { get; set; }
+
+    @* public async Task RemoveFromWatchlist() *@
+    @* { *@
+        @* System.Console.WriteLine("removed"); *@
+        @* await _service.rem *@
+    @* } *@
+
+}

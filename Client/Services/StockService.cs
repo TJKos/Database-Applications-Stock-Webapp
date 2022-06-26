@@ -10,6 +10,7 @@ using APBDProjekt.Shared.Models.DTOs;
 using Syncfusion.Blazor.DropDowns;
 using System.Collections.Concurrent;
 using System.Text;
+using System.Net.Http.Json;
 
 namespace APBDProjekt.Client.Services
 {
@@ -42,6 +43,7 @@ namespace APBDProjekt.Client.Services
                 Name = stockInfoDTO.Name,
                 Ticker = stockInfoDTO.Ticker,
                 Locale = stockInfoDTO.Locale,
+                Market = stockInfoDTO.Market,
                 Phone_Number = stockInfoDTO.Phone_Number,
                 Homepage_Url = stockInfoDTO.Homepage_Url,
                 Description = stockInfoDTO.Description,
@@ -95,10 +97,51 @@ namespace APBDProjekt.Client.Services
 
         public async Task SaveStockInfo(StockInfo stockInfo)
         {
-            string http = "/api/Stock";
+            string http = "/api/StockInfo";
             var stringContent = new StringContent(JsonConvert.SerializeObject(stockInfo), Encoding.UTF8, "application/json");
             await _client.PostAsync(http, stringContent);
 
+        }
+
+        public async Task SaveArticle(StockInfo stockInfo)
+        {
+            string http = "/api/Article";
+            var stringContent = new StringContent(JsonConvert.SerializeObject(stockInfo), Encoding.UTF8, "application/json");
+            await _client.PostAsync(http, stringContent);
+
+        }
+
+        public async Task SaveStockChart(StockInfo stockInfo)
+        {
+            string http = "/api/StockChart";
+            var stringContent = new StringContent(JsonConvert.SerializeObject(stockInfo), Encoding.UTF8, "application/json");
+            await _client.PostAsync(http, stringContent);
+
+        }
+
+        public async Task AddToWatchlist(int idStockInfo, string idUser)
+        {
+            System.Console.WriteLine("**********************************************************************");
+            System.Console.WriteLine(idStockInfo);
+            System.Console.WriteLine("**********************************************************************");
+
+            string http = $"/api/StockInfo/{idUser}";
+            var stringContent = new StringContent(JsonConvert.SerializeObject(idStockInfo), Encoding.UTF8, "application/json");
+            await _client.PostAsync(http, stringContent);
+        }
+
+        public async Task<List<StockInfo>> GetWatchlist(string idUser)
+        {
+            string http = $"/api/StockInfo/{idUser}";
+            // var content = await _client.GetAsync(http).Result.Content.ReadAsStringAsync();
+            // return JsonConvert.DeserializeObject<List<StockInfo>>(content);
+            return await _client.GetFromJsonAsync<List<StockInfo>>(http);
+        }
+
+        public async Task<StockInfo> GetStockInfo(string ticker)
+        {
+            string http = $"/api/StockInfo/{ticker}";
+            return await _client.GetFromJsonAsync<StockInfo>(http);
         }
     }
 }

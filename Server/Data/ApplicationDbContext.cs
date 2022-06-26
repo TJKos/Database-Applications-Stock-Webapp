@@ -23,7 +23,7 @@ namespace APBDProjekt.Server.Data
         public DbSet<ArticleDB> Article { get; set; }
         public DbSet<StockChartDataDB> StockChartData { get; set; }
         public DbSet<StockInfo_Article> StockInfo_Article { get; set; }
-
+        public DbSet<StockInfo_ApplicationUser> StockInfo_ApplicationUser { get; set; }
         public override DatabaseFacade Database => base.Database;
 
         public override ChangeTracker ChangeTracker => base.ChangeTracker;
@@ -40,7 +40,7 @@ namespace APBDProjekt.Server.Data
         public override DbSet<IdentityRole> Roles { get => base.Roles; set => base.Roles = value; }
         public override DbSet<IdentityRoleClaim<string>> RoleClaims { get => base.RoleClaims; set => base.RoleClaims = value; }
 
-        public ApplicationDbContext(
+        public ApplicationDbContext (
             DbContextOptions options,
             IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {
@@ -48,6 +48,14 @@ namespace APBDProjekt.Server.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<ApplicationUser>(e =>
+            {
+                e.ToTable("ApplicationUser");
+                e.HasKey(e => e.Id);
+
+
+            });
+            
 
             modelBuilder.Entity<StockInfoDB>(e =>
             {
@@ -91,6 +99,17 @@ namespace APBDProjekt.Server.Data
                 e.HasOne(e => e.StockInfo).WithMany(e => e.StockInfo_Article).HasForeignKey(e => e.IdStockInfo).OnDelete(DeleteBehavior.ClientSetNull);
                 e.HasOne(e => e.Article).WithMany(e => e.StockInfo_Article).HasForeignKey(e => e.IdArticle).OnDelete(DeleteBehavior.ClientSetNull);
             });
+
+            modelBuilder.Entity<StockInfo_ApplicationUser>(e =>
+            {
+                e.ToTable("StockInfo_ApplicationUser");
+                e.HasKey(e => new {e.IdStockInfo, e.IdUser});
+
+                e.HasOne(e => e.StockInfo).WithMany(e => e.StockInfo_ApplicationUser).HasForeignKey(e => e.IdStockInfo).OnDelete(DeleteBehavior.ClientSetNull);
+                e.HasOne(e => e.ApplicationUser).WithMany(e => e.StockInfo_ApplicationUser).HasForeignKey(e => e.IdUser).OnDelete(DeleteBehavior.ClientSetNull);
+                
+            });
+
         }
     }
 }
