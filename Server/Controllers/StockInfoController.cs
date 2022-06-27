@@ -37,8 +37,6 @@ namespace Server.Controllers
                 Sic_Description = stockInfo.Sic_Description,
                 Logo_Url = stockInfo.Logo_Url,
                 Icon_Url = stockInfo.Icon_Url
-                // IdUser = stockInfo.IdUser
-
             });
 
             await _service.SaveChanges();
@@ -102,7 +100,6 @@ namespace Server.Controllers
 
             await _service.SaveChanges();
             return Ok();
-            // if (await _service.GetStockInfo(idStockInfo).FirstOrDefaultAsync() == null) return NotFound("No such stock found.");
         }
     }
 }

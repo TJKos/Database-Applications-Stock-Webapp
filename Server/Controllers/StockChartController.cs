@@ -72,6 +72,5 @@ namespace APBDProjekt.Server.Controllers
 
         }
 
-        // [HttpDelete]
     }
 }

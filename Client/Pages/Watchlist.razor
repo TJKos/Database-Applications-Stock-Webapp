@@ -38,35 +38,6 @@ else if (StockWatchlist.Count != 0)
                 </GridColumn>
             </GridColumns>
         </SfGrid>
-    @* <table class="table table-striped table-bordered">
-        <thead>
-        <tr style="text-align:center">
-        <th>Logo</th>
-        <th>Ticker</th>
-        <th>Name</th>
-        <th>About</th>
-        <th>Country</th>
-        <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var stock in StockWatchlist)
-        {
-        <tr style="text-align:center">
-        <td style="vertical-align:middle"><img src="@stock.Logo_Url?apiKey=@ApiKey" alt="" class="logoimage" />
-        </td>
-        <td style="vertical-align:middle">@stock.Ticker</td>
-        <td style="vertical-align:middle">@stock.Name</td>
-        <td style="vertical-align:middle">@stock.Sic_Description</td>
-        <td style="vertical-align:middle">@stock.Locale.ToUpper()</td>
-        <td style="vertical-align:middle">
-        <SfButton CssClass="e-primary" @onclick=@(e => RemoveFromWatchlist(stock.IdStockInfo))>Delete
-        </SfButton>
-        </td>
-        </tr>
-        }
-        </tbody>
-        </table> *@
 </div>
 }
 else
