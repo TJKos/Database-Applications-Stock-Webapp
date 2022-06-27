@@ -121,10 +121,6 @@ namespace APBDProjekt.Client.Services
 
         public async Task AddToWatchlist(int idStockInfo, string idUser)
         {
-            System.Console.WriteLine("**********************************************************************");
-            System.Console.WriteLine(idStockInfo);
-            System.Console.WriteLine("**********************************************************************");
-
             string http = $"/api/StockInfo/{idUser}";
             var stringContent = new StringContent(JsonConvert.SerializeObject(idStockInfo), Encoding.UTF8, "application/json");
             await _client.PostAsync(http, stringContent);
