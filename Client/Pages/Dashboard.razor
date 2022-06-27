@@ -68,7 +68,7 @@
                     <HeaderTemplate>
                         
                         <div>
-                            <span class="name">@GetShortenedName() (@Selected.Ticker)</span>
+                            <span class="name">@GetShortened(Selected.Name, 20) (@Selected.Ticker)</span>
                             <SfButton IconCss="e-btn-sb-icons e-add-icon" CssClass="e-small e-round" IsPrimary="true" class="addbutton" @onclick=@AddToWatchlist></SfButton>
                         </div>
                     </HeaderTemplate>
@@ -125,7 +125,7 @@
                                 <article class="article">
                                 <h1 style="font-size:18px"><a href="@Articles.ElementAt(i).Article_Url" title="">@Articles.ElementAt(i).Title </a></h1>
                                 <img src="@Articles.ElementAt(i).Image_Url" alt="" class="articleimage"/>
-                                <p class="artdesc">@Articles.ElementAt(i).Description</p>
+                                <p class="artdesc">@GetShortened(Articles.ElementAt(i).Description, 150)</p>
                                 </article>
                             }
                             }
@@ -312,12 +312,12 @@
         ChartData = null;
         Selected = await _service.GetStock(args);
         if (Selected == null) return;
-        ChartData = await _service.GetChartData(args);
-        Articles = await _service.GetArticles(args);
         await SaveStockInfo();
-        await SaveArticleInfo();
-        await SaveStockChartData();
         Selected.IdStockInfo = (await _service.GetStockInfo(Selected.Ticker)).IdStockInfo;
+        Articles = await _service.GetArticles(args);
+        await SaveArticleInfo();
+        ChartData = await _service.GetChartData(args);
+        await SaveStockChartData();
     }
 
     public string GetTitle()
@@ -325,13 +325,12 @@
         return Selected.Ticker + " Stock Price";
     }
 
-    public string GetShortenedName()
+    public string GetShortened(string Desc, int maxLength)
     {
-        string Name = Selected.Name;
-        if (Name.Length > 20){
-            return Selected.Name.Substring(0, 20)+"...";
+        if (Desc.Length > maxLength){
+            return Desc.Substring(0, maxLength-3)+"...";
         }
-        return Name;
+        return Desc;
     }
 
     public async Task SaveStockInfo()

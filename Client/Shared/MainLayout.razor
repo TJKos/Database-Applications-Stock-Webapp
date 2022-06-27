@@ -17,6 +17,7 @@
     </div>
 </div>
 
+
 @inject NavigationManager Navigation
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @code {
@@ -26,3 +27,4 @@
             $"authentication/login?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
     }
 }
+

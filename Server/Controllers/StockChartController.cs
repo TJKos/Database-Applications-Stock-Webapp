@@ -22,24 +22,27 @@ namespace APBDProjekt.Server.Controllers
 
         [HttpPost]
         [Route("{idStockInfo}")]
-        public async Task<IActionResult> AddStockChartData(StockChartData stockChartData, int idStockInfo)
+        public async Task<IActionResult> AddStockChartData(List<StockChartData> stockChart, int idStockInfo)
         {
             if (!ModelState.IsValid) return BadRequest("Invalid model state!");
-            if (await _service.GetStockChartData(stockChartData.Date, idStockInfo).FirstOrDefaultAsync() != null) return Conflict("This stock chart data already exists in the database!");
-            if (await _service.GetStockInfo(idStockInfo).FirstOrDefaultAsync() == null) return Conflict("This stock doesn't exists in the database!");
-            await _service.AddStockChart(new StockChartDataDB
+            foreach (var stockChartData in stockChart)
             {
-                Date = stockChartData.Date,
-                IdStockInfo = idStockInfo,
-                v = stockChartData.v,
-                vw = stockChartData.vw,
-                t = stockChartData.t,
-                o = stockChartData.o,
-                h = stockChartData.h,
-                c = stockChartData.c,
-                l = stockChartData.l,
-                n = stockChartData.n
-            });
+                if (await _service.GetStockChartData(stockChartData.Date, idStockInfo).FirstOrDefaultAsync() != null) return Conflict("This stock chart data already exists in the database!");
+                if (await _service.GetStockInfo(idStockInfo).FirstOrDefaultAsync() == null) return Conflict("This stock doesn't exists in the database!");
+                await _service.AddStockChart(new StockChartDataDB
+                {
+                    Date = stockChartData.Date,
+                    IdStockInfo = idStockInfo,
+                    v = stockChartData.v,
+                    vw = stockChartData.vw,
+                    t = stockChartData.t,
+                    o = stockChartData.o,
+                    h = stockChartData.h,
+                    c = stockChartData.c,
+                    l = stockChartData.l,
+                    n = stockChartData.n
+                });
+            }
 
 
             await _service.SaveChanges();
