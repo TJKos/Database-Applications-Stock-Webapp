@@ -16,7 +16,5 @@ namespace APBDProjekt.Shared.Models
         public string Description { get; set; }
         public string Name { get; set; }
         public string Favicon_Url { get; set; }
-        public List<string> Tickers { get; set; }
-
     }
 }

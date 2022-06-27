@@ -10,9 +10,7 @@ namespace APBDProjekt.Shared.Models
         public int IdStock { get; set; }
         public string Ticker { get; set; }
         public string Name { get; set; }
-        public bool Active { get; set; }
         public string Market { get; set; }
         public string Primary_Exchange { get; set; }
-        public string Currency_Name { get; set; }
     }
 }

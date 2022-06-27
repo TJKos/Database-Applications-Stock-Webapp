@@ -34,6 +34,17 @@ namespace APBDProjekt.Server.Services
             return _context.Article.Where(e => e.IdArticle == idArticle);
         }
 
+        public IQueryable<ArticleDB> GetArticles(int idStockInfo)
+        {
+            return _context.StockInfo_Article
+            .Include(e => e.StockInfo)
+            .ThenInclude(e => e.StockInfo_Article)
+            .Include(e => e.Article)
+            .ThenInclude(e => e.StockInfo_Article)
+            .Where(e => e.IdStockInfo == idStockInfo)
+            .Select(e => e.Article);
+        }
+
         public async Task AddStock(StockInfoDB stockInfo)
         {
             await _context.StockInfo.AddAsync(stockInfo);
@@ -47,7 +58,8 @@ namespace APBDProjekt.Server.Services
         public async Task AddArticle(ArticleDB article, int idStockInfo)
         {
             await _context.Article.AddAsync(article);
-            await AddStockInfo_Article(new StockInfo_Article{
+            await AddStockInfo_Article(new StockInfo_Article
+            {
                 IdStockInfo = idStockInfo,
                 IdArticle = article.IdArticle
             });
@@ -77,7 +89,9 @@ namespace APBDProjekt.Server.Services
             .Include(e => e.ApplicationUser)
             .ThenInclude(e => e.StockInfo_ApplicationUser)
             .Where(e => e.IdUser == idUser)
-            .Select(e => new StockInfoDB{
+            .Select(e => new StockInfoDB
+            {
+                IdStockInfo = e.IdStockInfo,
                 Name = e.StockInfo.Name,
                 Ticker = e.StockInfo.Ticker,
                 Locale = e.StockInfo.Locale,
@@ -85,6 +99,7 @@ namespace APBDProjekt.Server.Services
                 Homepage_Url = e.StockInfo.Homepage_Url,
                 Description = e.StockInfo.Description,
                 Sic_Description = e.StockInfo.Sic_Description,
+                Primary_Exchange = e.StockInfo.Primary_Exchange,
                 Logo_Url = e.StockInfo.Logo_Url,
                 Icon_Url = e.StockInfo.Icon_Url
             });
@@ -93,15 +108,32 @@ namespace APBDProjekt.Server.Services
 
         public async Task AddStockToWatchlist(int idStockInfo, string idUser)
         {
-            await _context.StockInfo_ApplicationUser.AddAsync(new StockInfo_ApplicationUser{
+            await _context.StockInfo_ApplicationUser.AddAsync(new StockInfo_ApplicationUser
+            {
                 IdStockInfo = idStockInfo,
                 IdUser = idUser
             });
+        }
+
+        public void DeleteStockFromWatchlist(StockInfo_ApplicationUser stockInfo_user)
+        {
+            _context.StockInfo_ApplicationUser.Remove(stockInfo_user);
+        }
+
+        public IQueryable<StockInfoDB> GetFilteredStocksInfo(string searchInput)
+        {
+            return _context.StockInfo.Where(e => e.Ticker.StartsWith(searchInput.ToUpper()));
+        }
+
+        public IQueryable<StockInfo_ApplicationUser> GetStockOnWatchlist(string idUser, int idStockInfo)
+        {
+            return _context.StockInfo_ApplicationUser.Where(e => e.IdUser == idUser && e.IdStockInfo == idStockInfo);
         }
 
         public async Task SaveChanges()
         {
             await _context.SaveChangesAsync();
         }
+
     }
 }

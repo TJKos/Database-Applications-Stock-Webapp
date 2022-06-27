@@ -7,57 +7,93 @@
 @if (StockWatchlist == null)
 {
     <div>Loading Watchlist...</div>
-}else if (StockWatchlist.Count != 0)
+}
+else if (StockWatchlist.Count != 0)
 {
     <div class="container">
         <h3 class="p-3 text-center">Your Watchlist</h3>
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr style="text-align:center">
-                    <th>Logo</th>
-                    <th>Ticker</th>
-                    <th>Name</th>
-                    <th>Market</th>
-                    <th>Country</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var stock in StockWatchlist)
-                {
-                    <tr style="text-align:center">
-                        <td style="vertical-align:middle"><img src="@stock.Logo_Url?apiKey=@ApiKey" alt="" class="logoimage"/></td>
-                        <td style="vertical-align:middle">@stock.Ticker</td>
-                        <td style="vertical-align:middle">@stock.Name</td>
-                        <td style="vertical-align:middle">@stock.Market</td>
-                        <td style="vertical-align:middle">@stock.Locale.ToUpper()</td>
-                        <td style="vertical-align:middle"><SfButton CssClass="e-primary">Delete</SfButton></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}else
+        <SfGrid DataSource="@StockWatchlist" AllowPaging="true" AllowSorting="true">
+            <GridPageSettings PageSize="5"></GridPageSettings>
+            <GridColumns>
+                <GridColumn HeaderText="Logo" TextAlign="TextAlign.Center">
+                    <Template>
+                        @{
+                        var stock = (context as StockInfo);
+                        var imageSrc = String.Format(stock.Logo_Url + "?apiKey=" + ApiKey);
+                        <img src="@imageSrc" class="logoimage" />
+                        }
+                    </Template>
+                </GridColumn>
+                <GridColumn Field=@nameof(StockInfo.Ticker) HeaderText="Ticker" TextAlign="TextAlign.Center"></GridColumn>
+                <GridColumn Field=@nameof(StockInfo.Name) HeaderText="Name" TextAlign="TextAlign.Center"></GridColumn>
+                <GridColumn Field=@nameof(StockInfo.Sic_Description) HeaderText="About" TextAlign="TextAlign.Center"></GridColumn>
+                <GridColumn Field=@nameof(StockInfo.Locale) HeaderText="Country" TextAlign="TextAlign.Center" CustomAttributes="@(new Dictionary<string, object>(){ { "class", "e-attr" }})"></GridColumn>
+                <GridColumn HeaderText="Actions" TextAlign="TextAlign.Center">
+                    <Template>
+                        @{
+                        var stock = (context as StockInfo);
+                        <SfButton CssClass="e-primary" @onclick=@(e => RemoveFromWatchlist(stock.IdStockInfo))>Delete</SfButton>
+                        }
+                    </Template>
+                </GridColumn>
+            </GridColumns>
+        </SfGrid>
+    @* <table class="table table-striped table-bordered">
+        <thead>
+        <tr style="text-align:center">
+        <th>Logo</th>
+        <th>Ticker</th>
+        <th>Name</th>
+        <th>About</th>
+        <th>Country</th>
+        <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var stock in StockWatchlist)
+        {
+        <tr style="text-align:center">
+        <td style="vertical-align:middle"><img src="@stock.Logo_Url?apiKey=@ApiKey" alt="" class="logoimage" />
+        </td>
+        <td style="vertical-align:middle">@stock.Ticker</td>
+        <td style="vertical-align:middle">@stock.Name</td>
+        <td style="vertical-align:middle">@stock.Sic_Description</td>
+        <td style="vertical-align:middle">@stock.Locale.ToUpper()</td>
+        <td style="vertical-align:middle">
+        <SfButton CssClass="e-primary" @onclick=@(e => RemoveFromWatchlist(stock.IdStockInfo))>Delete
+        </SfButton>
+        </td>
+        </tr>
+        }
+        </tbody>
+        </table> *@
+</div>
+}
+else
 {
     <h1>Your Watchlist is empty.</h1>
     <div>Head to the dashboard to add something to your Watchlist!</div>
 }
 
 <style>
-    
+    .e-attr {
+        text-transform: uppercase;
+    }
+
     .logoimage {
         height: 100px;
+        max-width: 150px;
         width: auto;
     }
 </style>
 
 @code {
-    
+
     protected override async Task OnInitializedAsync()
     {
         ApiKey = "ot9qB766I32KClp0uaQbhpbDJOjlQkL1";
         AuthState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        UserId = AuthState.User.FindFirst(e => e.Type == "sub").Value; // ClaimTypes.NameIdentifier nie działa, tylko na serwerze :??
+        UserId = AuthState.User.FindFirst(e => e.Type == "sub").Value; // ClaimTypes.NameIdentifier nie działa, tylko na
         StockWatchlist = await _service.GetWatchlist(UserId);
         StateHasChanged();
     }
@@ -67,10 +103,15 @@
     public string UserId { get; set; }
     public List<StockInfo> StockWatchlist { get; set; }
 
-    @* public async Task RemoveFromWatchlist() *@
-    @* { *@
-        @* System.Console.WriteLine("removed"); *@
-        @* await _service.rem *@
-    @* } *@
+    public async Task RemoveFromWatchlist(int idStockInfo)
+    {
+        await _service.DeleteFromWatchlist(UserId, idStockInfo);
+        StockWatchlist = await _service.GetWatchlist(UserId);
+        StateHasChanged();
+    }
 
+    public string getNameofToUpper(string s)
+    {
+        return s.ToUpper();
+    }
 }

@@ -21,10 +21,14 @@ namespace APBDProjekt.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddArticle(Article article, int idStockInfo)
+        [Route("{idStockInfo}")]
+        public async Task<IActionResult> AddArticle(int idStockInfo, Article article)
         {
+            if (!ModelState.IsValid) return BadRequest("Invalid model state!");
             if (await _service.GetArticle(article.IdArticle).FirstOrDefaultAsync() != null) return Conflict("This article already exists in the database!");
-            await _service.AddArticle(new ArticleDB{
+            await _service.AddArticle(new ArticleDB
+            {
+                IdArticle = article.IdArticle,
                 Title = article.Title,
                 Author = article.Author,
                 Published_Utc = article.Published_Utc,
@@ -37,12 +41,29 @@ namespace APBDProjekt.Server.Controllers
 
             await _service.SaveChanges();
 
+
             return Created("", "");
 
-            
-            
         }
 
-        // [HttpDelete]
+        [HttpGet]
+        [Route("{idStockInfo}")]
+        public async Task<IActionResult> GetArticles(int idStockInfo)
+        {
+            var stockInfo = await _service.GetStockInfo(idStockInfo).FirstOrDefaultAsync();
+            if (stockInfo == null) return NotFound("There is no stock info with such id.");
+            return Ok(await _service.GetArticles(idStockInfo).Select(e => new Article
+            {
+                IdArticle = e.IdArticle,
+                Title = e.Title,
+                Published_Utc = e.Published_Utc,
+                Article_Url = e.Article_Url,
+                Image_Url = e.Image_Url,
+                Description = e.Description,
+                Name = e.Name,
+                Favicon_Url = e.Favicon_Url
+            }).ToListAsync());
+
+        }
     }
 }

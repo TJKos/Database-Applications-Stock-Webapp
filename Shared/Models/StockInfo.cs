@@ -16,7 +16,10 @@ namespace APBDProjekt.Shared.Models
         public string Homepage_Url { get; set; }
         public string Description { get; set; }
         public string Sic_Description { get; set; }
-        public string Logo_Url { get; set; }
-        public string Icon_Url { get; set; }
+        public string Primary_Exchange { get; set; }
+#nullable enable
+        public string? Logo_Url { get; set; }
+        public string? Icon_Url { get; set; }
+#nullable disable
     }
 }

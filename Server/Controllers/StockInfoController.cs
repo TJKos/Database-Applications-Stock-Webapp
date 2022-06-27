@@ -25,7 +25,8 @@ namespace Server.Controllers
         public async Task<IActionResult> AddStock(StockInfo stockInfo)
         {
             if (await _service.GetStockInfo(stockInfo.Ticker).FirstOrDefaultAsync() != null) return Conflict("This stock already exists in the database!");
-            await _service.AddStock(new StockInfoDB{
+            await _service.AddStock(new StockInfoDB
+            {
                 Name = stockInfo.Name,
                 Ticker = stockInfo.Ticker,
                 Locale = stockInfo.Locale,
@@ -37,28 +38,22 @@ namespace Server.Controllers
                 Logo_Url = stockInfo.Logo_Url,
                 Icon_Url = stockInfo.Icon_Url
                 // IdUser = stockInfo.IdUser
-                
+
             });
 
             await _service.SaveChanges();
 
             return Created("", "");
-            
+
         }
-        
+
         [HttpPost]
         [Route("{idUser}")]
         public async Task<IActionResult> AddStockToWatchlist(string idUser, [FromBody] int idStockInfo)
         {
-            // if ((await _service.GetWatchlist(idUser).Where(e => e.IdStockInfo == e.IdStockInfo).ToListAsync())[0] != null) return Conflict("This stock already exists in the watchlist!");
-            System.Console.WriteLine("----------------------------------------------------");
-            System.Console.WriteLine();
-            System.Console.WriteLine();
-            System.Console.WriteLine(idStockInfo);
-            System.Console.WriteLine();
-            System.Console.WriteLine();
-            System.Console.WriteLine("----------------------------------------------------");
-            var stockInfo = _service.GetStockInfo(idStockInfo);
+            if (!ModelState.IsValid) return BadRequest("Invalid model state!");
+            if (await _service.GetStockOnWatchlist(idUser, idStockInfo).FirstOrDefaultAsync() != null) return Conflict("This stock already exists in the watchlist!");
+            var stockInfo = await _service.GetStockInfo(idStockInfo).FirstOrDefaultAsync();
             if (stockInfo == null) return NotFound("This stock doesn't exist in the database!");
 
             await _service.AddStockToWatchlist(idStockInfo, idUser);
@@ -69,10 +64,10 @@ namespace Server.Controllers
         }
 
         [HttpGet]
-        [Route("{idStockInfo}")]
+        [Route("{ticker}")]
         public async Task<IActionResult> GetStockInfo(string ticker)
         {
-            var stockInfo = _service.GetStockInfo(ticker);
+            var stockInfo = await _service.GetStockInfo(ticker).FirstOrDefaultAsync();
             if (stockInfo == null) return NotFound("This stock doesn't exist.");
             return Ok(stockInfo);
         }
@@ -84,6 +79,30 @@ namespace Server.Controllers
             return Ok(await _service.GetWatchlist(idUser).ToListAsync());
         }
 
-        // [HttpDelete]
+        [HttpGet]
+        [Route("filter/{searchInput}")]
+        public async Task<IActionResult> GetFilteredStocksInfo(string searchInput)
+        {
+            return Ok(await _service.GetFilteredStocksInfo(searchInput).Select(e => new Stock
+            {
+                Ticker = e.Ticker,
+                Name = e.Name,
+                Market = e.Market,
+                Primary_Exchange = e.Primary_Exchange
+            }).ToListAsync());
+        }
+
+        [HttpDelete]
+        [Route("user/{idUser}/stock/{idStockInfo}")]
+        public async Task<IActionResult> DeleteStockFromWatchlist(string idUser, int idStockInfo)
+        {
+            var stockInfo_user = await _service.GetStockOnWatchlist(idUser, idStockInfo).FirstOrDefaultAsync();
+            if (stockInfo_user == null) return NotFound("No stock found on this user's watchlist.");
+            _service.DeleteStockFromWatchlist(stockInfo_user);
+
+            await _service.SaveChanges();
+            return Ok();
+            // if (await _service.GetStockInfo(idStockInfo).FirstOrDefaultAsync() == null) return NotFound("No such stock found.");
+        }
     }
 }

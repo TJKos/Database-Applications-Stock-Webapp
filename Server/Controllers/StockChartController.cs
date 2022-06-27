@@ -21,11 +21,14 @@ namespace APBDProjekt.Server.Controllers
         }
 
         [HttpPost]
+        [Route("{idStockInfo}")]
         public async Task<IActionResult> AddStockChartData(StockChartData stockChartData, int idStockInfo)
         {
+            if (!ModelState.IsValid) return BadRequest("Invalid model state!");
             if (await _service.GetStockChartData(stockChartData.Date, idStockInfo).FirstOrDefaultAsync() != null) return Conflict("This stock chart data already exists in the database!");
             if (await _service.GetStockInfo(idStockInfo).FirstOrDefaultAsync() == null) return Conflict("This stock doesn't exists in the database!");
-            await _service.AddStockChart(new StockChartDataDB{
+            await _service.AddStockChart(new StockChartDataDB
+            {
                 Date = stockChartData.Date,
                 IdStockInfo = idStockInfo,
                 v = stockChartData.v,
@@ -42,6 +45,28 @@ namespace APBDProjekt.Server.Controllers
             await _service.SaveChanges();
 
             return Created("", "");
+        }
+
+        [HttpGet]
+        [Route("{idStockInfo}")]
+        public async Task<IActionResult> GetArticles(int idStockInfo)
+        {
+            var stockInfo = await _service.GetStockInfo(idStockInfo).FirstOrDefaultAsync();
+            if (stockInfo == null) return NotFound("There is no stock info with such id.");
+            return Ok(await _service.GetStockChartDataDB(idStockInfo).Select(e => new StockChartData
+            {
+                IdStockChartData = e.IdStockChartData,
+                v = e.v,
+                vw = e.vw,
+                o = e.o,
+                c = e.c,
+                h = e.h,
+                l = e.l,
+                t = e.t,
+                n = e.n,
+                Date = e.Date
+            }).ToListAsync());
+
         }
 
         // [HttpDelete]

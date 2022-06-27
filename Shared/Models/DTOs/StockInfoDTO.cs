@@ -15,8 +15,11 @@ namespace APBDProjekt.Shared.Models.DTOs
         public string Homepage_Url { get; set; }
         public string Description { get; set; }
         public string Sic_Description { get; set; }
-        public Branding Branding { get; set; }
-        
+        public string Primary_Exchange { get; set; }
+#nullable enable
+        public Branding? Branding { get; set; }
+#nullable disable
+
 
     }
 

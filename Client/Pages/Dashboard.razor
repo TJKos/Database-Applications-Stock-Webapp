@@ -24,7 +24,7 @@
     <AutoCompleteEvents TValue="string" TItem="Stock" Filtering="@Filter" OnValueSelect="@Show" ></AutoCompleteEvents>
 </SfAutoComplete>
 
-@if (Selected != null)
+@if (Selected != null && ChartData != null)
 {
 
     <div class="dashboard">
@@ -68,7 +68,7 @@
                     <HeaderTemplate>
                         
                         <div>
-                            @Selected.Name (@Selected.Ticker)
+                            <span class="name">@GetShortenedName() (@Selected.Ticker)</span>
                             <SfButton IconCss="e-btn-sb-icons e-add-icon" CssClass="e-small e-round" IsPrimary="true" class="addbutton" @onclick=@AddToWatchlist></SfButton>
                         </div>
                     </HeaderTemplate>
@@ -91,6 +91,8 @@
                         <div>Stock Chart</div>
                     </HeaderTemplate>
                     <ContentTemplate>
+                        @if (ChartData != null)
+                        {
                         <div>@GetTitle()</div>
                         <SfStockChart EnableSelector="false">
                             <StockChartPeriods>
@@ -105,6 +107,9 @@
                                 <StockChartSeries DataSource="@ChartData" Type="ChartSeriesType.HiloOpenClose" XName="Date" YName="c" High="h" Low="l" Open="o" Close="c" Volume="v"></StockChartSeries>
                             </StockChartSeriesCollection>
                         </SfStockChart>
+                        }else{
+                            <div>No chart data found.</div>
+                        }
                     </ContentTemplate>
                 </DashboardLayoutPanel>
 
@@ -113,13 +118,19 @@
                         <div>Last 5 articles</div>
                     </HeaderTemplate>
                     <ContentTemplate>
-                        @for (int i = 4; i >= 0; i--)
-                        {
-                            <article class="article">
-                            <h1 style="font-size:18px"><a href="@Articles.ElementAt(i).Article_Url" title="">@Articles.ElementAt(i).Title </a></h1>
-                            <img src="@Articles.ElementAt(i).Image_Url" alt="" class="articleimage"/>
-                            <p class="artdesc">@Articles.ElementAt(i).Description</p>
-                            </article>
+                        @if (@Articles != null) {
+                            if (@Articles.Count() > 0){
+                            @for (int i = Math.Min(@Articles.Count-1, 4); i >= 0; i--)
+                            {
+                                <article class="article">
+                                <h1 style="font-size:18px"><a href="@Articles.ElementAt(i).Article_Url" title="">@Articles.ElementAt(i).Title </a></h1>
+                                <img src="@Articles.ElementAt(i).Image_Url" alt="" class="articleimage"/>
+                                <p class="artdesc">@Articles.ElementAt(i).Description</p>
+                                </article>
+                            }
+                            }
+                        }else{
+                            <div>No articles regarding this stock.</div>
                         }
                     </ContentTemplate>
                 </DashboardLayoutPanel>
@@ -131,6 +142,18 @@
 }
 
     <style>
+        .name {
+            @* display: -webkit-box;
+            max-width: 200px;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden; *@
+        }
+
         .auto_market{
 
         }
@@ -182,6 +205,7 @@
 
         .articleimage {
             width: auto;
+            max-width: 300px;
             height: 90px;
             float: right;
             margin: 0 0 0 15px;
@@ -285,11 +309,15 @@
 
     public async Task Show(SelectEventArgs<Stock> args)
     {
+        ChartData = null;
         Selected = await _service.GetStock(args);
+        if (Selected == null) return;
         ChartData = await _service.GetChartData(args);
         Articles = await _service.GetArticles(args);
         await SaveStockInfo();
-        @* Selected.IdStockInfo = (await _service.GetStockInfo(Selected.Ticker)).IdStockInfo; *@
+        await SaveArticleInfo();
+        await SaveStockChartData();
+        Selected.IdStockInfo = (await _service.GetStockInfo(Selected.Ticker)).IdStockInfo;
     }
 
     public string GetTitle()
@@ -297,14 +325,33 @@
         return Selected.Ticker + " Stock Price";
     }
 
+    public string GetShortenedName()
+    {
+        string Name = Selected.Name;
+        if (Name.Length > 20){
+            return Selected.Name.Substring(0, 20)+"...";
+        }
+        return Name;
+    }
+
     public async Task SaveStockInfo()
     {
         await _service.SaveStockInfo(Selected);
     }
 
+    public async Task SaveArticleInfo()
+    {
+        await _service.SaveArticles(Articles.ToList(), Selected.IdStockInfo);
+    }
+
     public async Task AddToWatchlist()
     {
-        await _service.AddToWatchlist((await _service.GetStockInfo(Selected.Ticker)).IdStockInfo, UserId);
+        await _service.AddToWatchlist(Selected.IdStockInfo, UserId);
+    }
+
+    public async Task SaveStockChartData()
+    {
+        await _service.SaveStockChart(ChartData, Selected.IdStockInfo);
     }
 
 }
